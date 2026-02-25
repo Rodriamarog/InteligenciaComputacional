@@ -1,0 +1,16 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# .NET build output
+BlazorInference/bin/
+BlazorInference/obj/
+
+# ONNX model — upload to Google Drive separately
+model/heart_disease.onnx
+BlazorInference/wwwroot/model/heart_disease.onnx
+
+# Dataset (re-download from Kaggle)
+notebook/data/heart.csv

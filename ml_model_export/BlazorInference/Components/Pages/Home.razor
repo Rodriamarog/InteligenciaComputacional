@@ -1,0 +1,245 @@
+@page "/"
+@rendermode InteractiveServer
+@using BlazorInference.Models
+@using BlazorInference.Services
+@inject OnnxPredictionService PredictionService
+
+<PageTitle>Heart Disease Predictor</PageTitle>
+
+<div class="container py-4" style="max-width: 800px;">
+
+    <div class="text-center mb-4">
+        <h1 class="display-5 fw-bold">Heart Disease Risk Predictor</h1>
+        <p class="text-muted">
+            Enter patient data below. The model (Random Forest + ONNX) will predict
+            the likelihood of coronary heart disease.
+        </p>
+    </div>
+
+    <EditForm Model="Input" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="alert alert-warning" />
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Numerical Features</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Age (years)</label>
+                        <InputNumber class="form-control" @bind-Value="Input.Age" />
+                        <ValidationMessage For="@(() => Input.Age)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Resting BP (mmHg)</label>
+                        <InputNumber class="form-control" @bind-Value="Input.Trestbps" />
+                        <ValidationMessage For="@(() => Input.Trestbps)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Cholesterol (mg/dl)</label>
+                        <InputNumber class="form-control" @bind-Value="Input.Chol" />
+                        <ValidationMessage For="@(() => Input.Chol)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Max Heart Rate (bpm)</label>
+                        <InputNumber class="form-control" @bind-Value="Input.Thalach" />
+                        <ValidationMessage For="@(() => Input.Thalach)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">ST Depression (oldpeak)</label>
+                        <InputNumber class="form-control" @bind-Value="Input.Oldpeak" />
+                        <small class="text-muted">e.g. 0.0 - 6.2</small>
+                        <ValidationMessage For="@(() => Input.Oldpeak)" class="text-danger small" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Categorical Features</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Sex</label>
+                        <InputSelect class="form-select" @bind-Value="Input.Sex">
+                            <option value="0">Female</option>
+                            <option value="1">Male</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Input.Sex)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Chest Pain Type</label>
+                        <InputSelect class="form-select" @bind-Value="Input.Cp">
+                            <option value="0">0 - Typical Angina</option>
+                            <option value="1">1 - Atypical Angina</option>
+                            <option value="2">2 - Non-anginal Pain</option>
+                            <option value="3">3 - Asymptomatic</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Input.Cp)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Fasting Blood Sugar &gt; 120 mg/dl</label>
+                        <InputSelect class="form-select" @bind-Value="Input.Fbs">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Input.Fbs)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Resting ECG Result</label>
+                        <InputSelect class="form-select" @bind-Value="Input.Restecg">
+                            <option value="0">0 - Normal</option>
+                            <option value="1">1 - ST-T Wave Abnormality</option>
+                            <option value="2">2 - LV Hypertrophy</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Input.Restecg)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Exercise Induced Angina</label>
+                        <InputSelect class="form-select" @bind-Value="Input.Exang">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Input.Exang)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Slope of ST Segment</label>
+                        <InputSelect class="form-select" @bind-Value="Input.Slope">
+                            <option value="0">0 - Upsloping</option>
+                            <option value="1">1 - Flat</option>
+                            <option value="2">2 - Downsloping</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Input.Slope)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Major Vessels (ca, 0-4)</label>
+                        <InputSelect class="form-select" @bind-Value="Input.Ca">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Input.Ca)" class="text-danger small" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Thalassemia (thal)</label>
+                        <InputSelect class="form-select" @bind-Value="Input.Thal">
+                            <option value="0">0 - Normal</option>
+                            <option value="1">1 - Fixed Defect</option>
+                            <option value="2">2 - Reversible Defect</option>
+                            <option value="3">3 - Other</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Input.Thal)" class="text-danger small" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger btn-lg px-5">
+                Predict Risk
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-lg" @onclick="Reset">
+                Reset
+            </button>
+        </div>
+
+    </EditForm>
+
+    @if (Result.HasValue)
+    {
+        var (hasDisease, prob) = Result.Value;
+        var cardClass   = hasDisease ? "border-danger"  : "border-success";
+        var headerClass = hasDisease ? "bg-danger text-white" : "bg-success text-white";
+        var verdict     = hasDisease ? "HIGH RISK -- Heart Disease Likely" : "LOW RISK -- No Disease Detected";
+        var pct         = (prob * 100).ToString("F1");
+
+        <div class="card @cardClass shadow mt-4 border-3">
+            <div class="card-header @headerClass">
+                <h4 class="mb-0">Prediction Result</h4>
+            </div>
+            <div class="card-body">
+                <h2 class="fw-bold @(hasDisease ? "text-danger" : "text-success")">@verdict</h2>
+                <p class="fs-5">
+                    Probability of heart disease: <strong>@pct%</strong>
+                </p>
+                <hr />
+                <h6 class="text-muted">Input Summary</h6>
+                <div class="row row-cols-2 row-cols-md-4 g-2 small">
+                    <div><span class="fw-semibold">Age:</span> @Input.Age</div>
+                    <div><span class="fw-semibold">Sex:</span> @(Input.Sex == 1 ? "Male" : "Female")</div>
+                    <div><span class="fw-semibold">Chest Pain:</span> @Input.Cp</div>
+                    <div><span class="fw-semibold">BP:</span> @Input.Trestbps mmHg</div>
+                    <div><span class="fw-semibold">Chol:</span> @Input.Chol mg/dl</div>
+                    <div><span class="fw-semibold">FBS:</span> @(Input.Fbs == 1 ? "Yes" : "No")</div>
+                    <div><span class="fw-semibold">ECG:</span> @Input.Restecg</div>
+                    <div><span class="fw-semibold">Max HR:</span> @Input.Thalach bpm</div>
+                    <div><span class="fw-semibold">Exang:</span> @(Input.Exang == 1 ? "Yes" : "No")</div>
+                    <div><span class="fw-semibold">Oldpeak:</span> @Input.Oldpeak</div>
+                    <div><span class="fw-semibold">Slope:</span> @Input.Slope</div>
+                    <div><span class="fw-semibold">Ca:</span> @Input.Ca</div>
+                    <div><span class="fw-semibold">Thal:</span> @Input.Thal</div>
+                </div>
+                @if (hasDisease)
+                {
+                    <div class="alert alert-warning mt-3 mb-0 small">
+                        <strong>Note:</strong> This is a machine-learning prediction for educational purposes only.
+                        Always consult a qualified medical professional for actual diagnosis.
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger mt-3">@ErrorMessage</div>
+    }
+
+</div>
+
+@code {
+    private PatientInput Input { get; set; } = new();
+    private (bool HasDisease, float Probability)? Result { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    private void HandleValidSubmit()
+    {
+        ErrorMessage = null;
+        Result = null;
+        try
+        {
+            Result = PredictionService.Predict(Input);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Prediction failed: {ex.Message}";
+        }
+    }
+
+    private void Reset()
+    {
+        Input = new PatientInput();
+        Result = null;
+        ErrorMessage = null;
+    }
+}
