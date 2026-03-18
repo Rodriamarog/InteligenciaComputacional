@@ -14,6 +14,7 @@ __pycache__/
 .venv
 env/
 ENV/
+mnist_env/
 
 # IDE
 .vscode/
